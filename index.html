@@ -51,72 +51,131 @@
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col overflow-hidden select-none">
+<body class="bg-slate-950 text-slate-100 h-screen flex overflow-hidden select-none">
 
-  <!-- Minimal Header -->
-  <header class="h-14 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur px-4 sm:px-6 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-sm">
-        ⚡
-      </div>
-      <div>
-        <h1 class="font-bold text-xs sm:text-sm tracking-wide text-slate-200">PM Prompt Engine</h1>
-        <div class="text-[10px] text-slate-400 font-mono hidden sm:block">Gemini Brain ➔ Claude Prompt</div>
-      </div>
-    </div>
+  <!-- Mobile Backdrop -->
+  <div id="mobileBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-30 hidden md:hidden transition-opacity"></div>
 
-    <div class="flex items-center gap-2">
-      <button onclick="clearChatHistory()" class="text-xs text-slate-400 hover:text-rose-400 px-2 py-1 transition" title="پاک کردن چت">
-        پاکسازی چت
-      </button>
-      <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-xs font-medium text-slate-200 flex items-center gap-1.5 transition">
-        <span>⚙️ تنظیمات</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- Chat Messages Stream -->
-  <main id="chatContainer" class="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-4xl mx-auto w-full select-text">
+  <!-- Sidebar: Chat Topics List -->
+  <aside id="sidebar" class="fixed md:static top-0 bottom-0 right-0 z-40 w-72 bg-slate-900 border-l border-slate-800 flex flex-col h-full transform translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out shrink-0">
     
-    <!-- Empty state -->
-    <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-60">
-      <div class="text-3xl">💡</div>
-      <h3 class="text-sm sm:text-base font-bold text-slate-300">نیازمندی یا تسک محصولی خود را بنویسید</h3>
-      <p class="text-xs text-slate-400 max-w-xs sm:max-w-sm leading-relaxed">
-        جمینای تسک‌ها و معیارهای پذیرش را تحلیل می‌کند و یک پرامپت انگلیسی آماده برای کپی به Claude به شما می‌دهد.
-      </p>
+    <!-- Sidebar Header: New Chat -->
+    <div class="p-3.5 border-b border-slate-800/80 flex items-center justify-between gap-2">
+      <button onclick="createNewSession()" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>گفتگوی جدید</span>
+      </button>
+
+      <button onclick="toggleSidebar(false)" class="md:hidden p-2 text-slate-400 hover:text-slate-200 rounded-lg">
+        ✕
+      </button>
     </div>
 
-  </main>
+    <!-- Sessions List -->
+    <div class="flex-1 overflow-y-auto p-2 space-y-1" id="sessionsList">
+      <!-- Session items injected here -->
+    </div>
 
-  <!-- Input Bar -->
-  <footer class="border-t border-slate-800/80 bg-slate-900/80 backdrop-blur p-3 sm:p-4 shrink-0">
-    <div class="max-w-4xl mx-auto">
-      <div class="flex items-end gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-1.5 sm:p-2 focus-within:border-emerald-500/80 focus-within:ring-1 focus-within:ring-emerald-500/40 transition">
-        <textarea
-          id="userInput"
-          rows="1"
-          placeholder="تسک یا نیازمندی محصولی خود را بنویسید..."
-          class="w-full bg-transparent resize-none border-0 focus:outline-none text-slate-100 placeholder-slate-500 text-xs sm:text-sm p-2 max-h-32 sm:max-h-36 leading-relaxed"
-          onkeydown="handleKeyDown(event)"
-          oninput="autoGrow(this)"
-        ></textarea>
+    <!-- Sidebar Footer -->
+    <div class="p-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+      <button onclick="openSettingsModal()" class="flex items-center gap-1.5 hover:text-slate-200 py-1 px-2 rounded-lg hover:bg-slate-800 transition">
+        <span>⚙️ تنظیمات کلیدها</span>
+      </button>
+      <button onclick="clearAllSessions()" class="text-slate-500 hover:text-rose-400 py-1 px-2 rounded-lg transition" title="حذف تمام گفتگوها">
+        حذف همه
+      </button>
+    </div>
 
-        <button
-          id="sendBtn"
-          onclick="sendMessage()"
-          class="px-3.5 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shrink-0 disabled:opacity-40"
-        >
-          <span>ارسال</span>
-          <svg class="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+  </aside>
+
+  <!-- Main Chat Content -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950 relative">
+
+    <!-- Top Navigation Bar -->
+    <header class="h-14 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur px-3 sm:px-6 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5">
+        <!-- Mobile Sidebar Toggle -->
+        <button onclick="toggleSidebar(true)" class="md:hidden p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-xl transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-      </div>
-    </div>
-  </footer>
 
-  <!-- Settings Modal -->
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+          ⚡
+        </div>
+        
+        <!-- Active Session Title -->
+        <div class="overflow-hidden">
+          <h1 id="headerSessionTitle" class="font-bold text-xs sm:text-sm tracking-wide text-slate-200 truncate max-w-[200px] sm:max-w-xs">
+            گفتگوی جدید
+          </h1>
+          <div class="text-[10px] text-slate-400 font-mono hidden sm:block">PM Prompt Engine</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- New Chat Quick Button on Desktop Header -->
+        <button onclick="createNewSession()" class="hidden md:flex items-center gap-1 px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium border border-slate-700/60 transition">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>چت جدید</span>
+        </button>
+
+        <!-- Settings Button -->
+        <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-xs font-medium text-slate-200 flex items-center gap-1.5 transition">
+          <span>⚙️ تنظیمات</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Chat Messages Stream -->
+    <main id="chatContainer" class="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-4xl mx-auto w-full select-text">
+      
+      <!-- Empty state -->
+      <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-60">
+        <div class="text-3xl">💡</div>
+        <h3 class="text-sm sm:text-base font-bold text-slate-300">نیازمندی یا تسک محصولی خود را بنویسید</h3>
+        <p class="text-xs text-slate-400 max-w-xs sm:max-w-sm leading-relaxed">
+          جمینای تسک‌ها و معیارهای پذیرش را تحلیل می‌کند و یک پرامپت انگلیسی آماده برای کپی به Claude به شما می‌دهد.
+        </p>
+      </div>
+
+    </main>
+
+    <!-- Input Bar -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/80 backdrop-blur p-3 sm:p-4 shrink-0">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-end gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-1.5 sm:p-2 focus-within:border-emerald-500/80 focus-within:ring-1 focus-within:ring-emerald-500/40 transition">
+          <textarea
+            id="userInput"
+            rows="1"
+            placeholder="تسک یا نیازمندی محصولی خود را بنویسید..."
+            class="w-full bg-transparent resize-none border-0 focus:outline-none text-slate-100 placeholder-slate-500 text-xs sm:text-sm p-2 max-h-32 sm:max-h-36 leading-relaxed"
+            onkeydown="handleKeyDown(event)"
+            oninput="autoGrow(this)"
+          ></textarea>
+
+          <button
+            id="sendBtn"
+            onclick="sendMessage()"
+            class="px-3.5 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shrink-0 disabled:opacity-40"
+          >
+            <span>ارسال</span>
+            <svg class="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Settings Modal (Clean & Simplified) -->
   <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -124,35 +183,31 @@
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 p-1">✕</button>
       </div>
 
-      <div class="space-y-3.5 text-xs">
+      <div class="space-y-4 text-xs">
         <div>
-          <label class="font-bold text-emerald-400 block mb-1">کلید Google Gemini API Key (رایگان):</label>
+          <label class="font-bold text-emerald-400 block mb-1">کلید Google Gemini API Key (الزامی):</label>
           <input
             type="password"
             id="cfgGeminiKey"
             placeholder="AIzaSy..."
             class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:border-emerald-500 focus:outline-none"
           />
-          <p class="text-[11px] text-slate-400 mt-1">کلید در مرورگر/گوشی شما ذخیره می‌شود. دریافت رایگان از <a href="https://aistudio.google.com/apikey" target="_blank" class="text-emerald-400 underline">Google AI Studio</a>.</p>
+          <p class="text-[11px] text-slate-400 mt-1">
+            برای فکر کردن و تولید پرامپت استفاده می‌شود. دریافت رایگان از <a href="https://aistudio.google.com/apikey" target="_blank" class="text-emerald-400 underline">Google AI Studio</a>.
+          </p>
         </div>
 
         <div>
-          <label class="font-bold text-slate-300 block mb-1">کلید Anthropic API Key (اختیاری - برای ارسال مستقیم):</label>
+          <label class="font-bold text-slate-300 block mb-1">کلید Anthropic API Key (اختیاری):</label>
           <input
             type="password"
             id="cfgAnthropicKey"
             placeholder="sk-ant-..."
             class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:border-emerald-500 focus:outline-none"
           />
-        </div>
-
-        <div>
-          <label class="font-bold text-slate-300 block mb-1">مدل Claude:</label>
-          <select id="cfgClaudeModel" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-xs focus:border-emerald-500 focus:outline-none">
-            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-            <option value="claude-3-7-sonnet-latest">Claude 3.7 Sonnet</option>
-            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-          </select>
+          <p class="text-[11px] text-slate-400 mt-1">
+            کاملاً اختیاری است. فقط در صورتی که بخواهید دکمه «ارسال مستقیم به Claude» هم فعال باشد آن را وارد کنید (در غیر این صورت فقط با دکمه کپی پرامپت کار می‌کنید).
+          </p>
         </div>
       </div>
 
@@ -199,9 +254,11 @@
       "gemini-flash-latest"
     ];
 
+    let currentSessionId = null;
+
     document.addEventListener('DOMContentLoaded', () => {
       loadSettings();
-      renderStoredHistory();
+      initSessions();
     });
 
     function autoGrow(element) {
@@ -209,18 +266,44 @@
       element.style.height = (element.scrollHeight) + 'px';
     }
 
-    // Settings in LocalStorage
+    // Toggle Sidebar on mobile
+    function toggleSidebar(open) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('mobileBackdrop');
+      if (open) {
+        sidebar.classList.remove('translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    // Settings
     function loadSettings() {
-      const geminiKey = localStorage.getItem('pm_gemini_key') || '';
-      const anthropicKey = localStorage.getItem('pm_anthropic_key') || '';
-      const claudeModel = localStorage.getItem('pm_claude_model') || 'claude-3-5-sonnet-20241022';
+      let geminiKey = localStorage.getItem('pm_gemini_key') || '';
+      let anthropicKey = localStorage.getItem('pm_anthropic_key') || '';
 
       document.getElementById('cfgGeminiKey').value = geminiKey;
       document.getElementById('cfgAnthropicKey').value = anthropicKey;
-      document.getElementById('cfgClaudeModel').value = claudeModel;
 
+      // Auto-load from local server if empty
       if (!geminiKey) {
-        setTimeout(openSettingsModal, 400);
+        fetch('/api/config')
+          .then(r => r.json())
+          .then(cfg => {
+            if (cfg.gemini_api_key) {
+              localStorage.setItem('pm_gemini_key', cfg.gemini_api_key);
+              document.getElementById('cfgGeminiKey').value = cfg.gemini_api_key;
+            }
+            if (cfg.anthropic_api_key) {
+              localStorage.setItem('pm_anthropic_key', cfg.anthropic_api_key);
+              document.getElementById('cfgAnthropicKey').value = cfg.anthropic_api_key;
+            }
+          })
+          .catch(() => {
+            setTimeout(openSettingsModal, 400);
+          });
       }
     }
 
@@ -230,54 +313,183 @@
     function saveSettings() {
       const geminiKey = document.getElementById('cfgGeminiKey').value.trim();
       const anthropicKey = document.getElementById('cfgAnthropicKey').value.trim();
-      const claudeModel = document.getElementById('cfgClaudeModel').value;
 
       localStorage.setItem('pm_gemini_key', geminiKey);
       localStorage.setItem('pm_anthropic_key', anthropicKey);
-      localStorage.setItem('pm_claude_model', claudeModel);
 
       closeSettingsModal();
+      // Re-render current messages to update visibility of direct send button
+      renderCurrentSessionMessages();
     }
 
-    // Chat History in LocalStorage
-    function getStoredHistory() {
+    // Sessions Management
+    function getStoredSessions() {
       try {
-        return JSON.parse(localStorage.getItem('pm_chat_history') || '[]');
+        const data = JSON.parse(localStorage.getItem('pm_sessions') || '[]');
+        return Array.isArray(data) ? data : [];
       } catch (e) {
         return [];
       }
     }
 
-    function appendToHistory(turn) {
-      const history = getStoredHistory();
-      history.push(turn);
-      localStorage.setItem('pm_chat_history', JSON.stringify(history.slice(-30)));
+    function saveSessions(sessions) {
+      localStorage.setItem('pm_sessions', JSON.stringify(sessions));
+      renderSessionsList();
     }
 
-    function renderStoredHistory() {
-      const history = getStoredHistory();
-      if (history && history.length > 0) {
-        document.getElementById('emptyState')?.classList.add('hidden');
-        history.forEach(item => {
+    function initSessions() {
+      let sessions = getStoredSessions();
+      if (sessions.length === 0) {
+        const newSession = {
+          id: 'sess_' + Date.now(),
+          title: 'گفتگوی جدید',
+          createdAt: Date.now(),
+          messages: []
+        };
+        sessions = [newSession];
+        currentSessionId = newSession.id;
+        saveSessions(sessions);
+      } else {
+        const savedActive = localStorage.getItem('pm_active_session_id');
+        currentSessionId = sessions.some(s => s.id === savedActive) ? savedActive : sessions[0].id;
+      }
+
+      localStorage.setItem('pm_active_session_id', currentSessionId);
+      renderSessionsList();
+      renderCurrentSessionMessages();
+    }
+
+    function createNewSession() {
+      const sessions = getStoredSessions();
+      const newSession = {
+        id: 'sess_' + Date.now(),
+        title: 'گفتگوی جدید',
+        createdAt: Date.now(),
+        messages: []
+      };
+      sessions.unshift(newSession);
+      currentSessionId = newSession.id;
+      localStorage.setItem('pm_active_session_id', currentSessionId);
+      saveSessions(sessions);
+      renderCurrentSessionMessages();
+      toggleSidebar(false);
+
+      const input = document.getElementById('userInput');
+      input.focus();
+    }
+
+    function selectSession(id) {
+      currentSessionId = id;
+      localStorage.setItem('pm_active_session_id', id);
+      renderSessionsList();
+      renderCurrentSessionMessages();
+      toggleSidebar(false);
+    }
+
+    function deleteSession(id, event) {
+      if (event) event.stopPropagation();
+      let sessions = getStoredSessions();
+      if (sessions.length <= 1) {
+        // If it's the last session, just clear its messages
+        sessions[0].title = 'گفتگوی جدید';
+        sessions[0].messages = [];
+        currentSessionId = sessions[0].id;
+      } else {
+        sessions = sessions.filter(s => s.id !== id);
+        if (currentSessionId === id) {
+          currentSessionId = sessions[0].id;
+        }
+      }
+      localStorage.setItem('pm_active_session_id', currentSessionId);
+      saveSessions(sessions);
+      renderCurrentSessionMessages();
+    }
+
+    function clearAllSessions() {
+      if (!confirm('آیا تمام گفتگوها و پرامپت‌ها پاک شوند؟')) return;
+      localStorage.removeItem('pm_sessions');
+      initSessions();
+    }
+
+    function renderSessionsList() {
+      const sessions = getStoredSessions();
+      const container = document.getElementById('sessionsList');
+      container.innerHTML = '';
+
+      sessions.forEach(sess => {
+        const isActive = sess.id === currentSessionId;
+        const div = document.createElement('div');
+        div.onclick = () => selectSession(sess.id);
+        div.className = `group flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition ${
+          isActive 
+            ? 'bg-slate-800 text-emerald-400 font-bold border border-slate-700/80 shadow-sm' 
+            : 'text-slate-300 hover:bg-slate-800/50 hover:text-slate-100'
+        }`;
+
+        div.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden flex-1">
+            <span class="${isActive ? 'text-emerald-400' : 'text-slate-500'}">💬</span>
+            <span class="truncate">${escapeHtml(sess.title || 'گفتگوی جدید')}</span>
+          </div>
+          <button 
+            onclick="deleteSession('${sess.id}', event)" 
+            title="حذف این گفتگو" 
+            class="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-400 text-slate-500 rounded transition shrink-0 ml-1"
+          >
+            🗑️
+          </button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function getCurrentSession() {
+      const sessions = getStoredSessions();
+      return sessions.find(s => s.id === currentSessionId) || sessions[0];
+    }
+
+    function renderCurrentSessionMessages() {
+      const session = getCurrentSession();
+      if (!session) return;
+
+      document.getElementById('headerSessionTitle').textContent = session.title || 'گفتگوی جدید';
+
+      const container = document.getElementById('chatContainer');
+      container.innerHTML = '';
+
+      const messages = session.messages || [];
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-60">
+            <div class="text-3xl">💡</div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-300">نیازمندی یا تسک محصولی خود را بنویسید</h3>
+            <p class="text-xs text-slate-400 max-w-xs sm:max-w-sm leading-relaxed">
+              جمینای تسک‌ها و معیارهای پذیرش را تحلیل می‌کند و یک پرامپت انگلیسی آماده برای کپی به Claude به شما می‌دهد.
+            </p>
+          </div>
+        `;
+      } else {
+        messages.forEach(item => {
           renderUserMessage(item.user);
           renderAssistantTurn(item.id, item.gemini, item.claude_prompt, item.claude_response);
         });
       }
     }
 
-    function clearChatHistory() {
-      if (!confirm('آیا تاریخچه گفتگو در این دستگاه پاک شود؟')) return;
-      localStorage.removeItem('pm_chat_history');
-      const container = document.getElementById('chatContainer');
-      container.innerHTML = `
-        <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-60">
-          <div class="text-3xl">💡</div>
-          <h3 class="text-sm sm:text-base font-bold text-slate-300">نیازمندی یا تسک محصولی خود را بنویسید</h3>
-          <p class="text-xs text-slate-400 max-w-xs sm:max-w-sm leading-relaxed">
-            جمینای تسک‌ها و معیارهای پذیرش را تحلیل می‌کند و یک پرامپت انگلیسی آماده برای کپی به Claude به شما می‌دهد.
-          </p>
-        </div>
-      `;
+    function appendMessageToCurrentSession(turn) {
+      const sessions = getStoredSessions();
+      const session = sessions.find(s => s.id === currentSessionId);
+      if (!session) return;
+
+      // Auto update title on first message
+      if (session.messages.length === 0 || session.title === 'گفتگوی جدید') {
+        const words = turn.user.trim().split(/\s+/).slice(0, 6).join(' ');
+        session.title = words.length > 35 ? words.substring(0, 35) + '...' : words;
+        document.getElementById('headerSessionTitle').textContent = session.title;
+      }
+
+      session.messages.push(turn);
+      saveSessions(sessions);
     }
 
     function handleKeyDown(event) {
@@ -287,7 +499,7 @@
       }
     }
 
-    // Main API Call (100% Client-side Direct to Google Gemini)
+    // Main API Call (Gemini via client fetch)
     async function sendMessage() {
       const input = document.getElementById('userInput');
       const text = input.value.trim();
@@ -311,9 +523,11 @@
       const loadingId = renderLoading();
 
       try {
-        const history = getStoredHistory();
+        const session = getCurrentSession();
+        const messages = session ? session.messages : [];
         const geminiHistory = [];
-        history.slice(-6).forEach(h => {
+        
+        messages.slice(-6).forEach(h => {
           if (h.user) geminiHistory.push({ role: "user", parts: [{ text: h.user }] });
           if (h.gemini) geminiHistory.push({ role: "model", parts: [{ text: h.gemini }] });
         });
@@ -328,7 +542,6 @@
         let result = null;
         let lastError = "";
 
-        // Try models sequentially
         for (const model of CANDIDATE_MODELS) {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
           try {
@@ -381,11 +594,12 @@
         if (result) {
           const turnId = 'msg_' + Date.now();
           renderAssistantTurn(turnId, result.geminiText, result.claudePrompt);
-          appendToHistory({
+          appendMessageToCurrentSession({
             id: turnId,
             user: text,
             gemini: result.geminiText,
-            claude_prompt: result.claudePrompt
+            claude_prompt: result.claudePrompt,
+            claude_response: null
           });
         } else {
           renderError(`خطا در ارتباط با جمینای: ${lastError}`);
@@ -450,6 +664,7 @@
       div.className = 'flex justify-start w-full';
 
       const parsedGemini = marked.parse(geminiText || '');
+      const hasAnthropicKey = !!localStorage.getItem('pm_anthropic_key');
 
       let promptBoxHtml = '';
       if (claudePrompt) {
@@ -464,12 +679,14 @@
                 </span>
                 
                 <div class="flex items-center gap-1.5">
-                  <button id="copyBtn_${id}" onclick="copyPrompt('${id}')" class="px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 transition">
+                  <button id="copyBtn_${id}" onclick="copyPrompt('${id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 transition shadow-sm">
                     <span>📋 کپی برای Claude</span>
                   </button>
-                  <button id="sendClaudeBtn_${id}" onclick="sendDirectToClaude('${id}')" class="px-2.5 sm:px-3 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-lg font-medium text-[11px] border border-slate-700 flex items-center gap-1 transition">
-                    <span>🚀 ارسال مستقیم</span>
-                  </button>
+                  ${hasAnthropicKey ? `
+                    <button id="sendClaudeBtn_${id}" onclick="sendDirectToClaude('${id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-lg font-medium text-[11px] border border-slate-700 flex items-center gap-1 transition">
+                      <span>🚀 ارسال مستقیم</span>
+                    </button>
+                  ` : ''}
                 </div>
               </div>
 
@@ -510,18 +727,15 @@
       setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
     }
 
-    // Direct Claude execution via Browser (optional)
+    // Direct Claude execution (optional, only if Anthropic key is entered)
     async function sendDirectToClaude(id) {
       const textarea = document.getElementById(`promptText_${id}`);
       if (!textarea) return;
       const prompt = textarea.value.trim();
 
       const anthropicKey = localStorage.getItem('pm_anthropic_key') || '';
-      const claudeModel = localStorage.getItem('pm_claude_model') || 'claude-3-5-sonnet-20241022';
-
       if (!anthropicKey) {
-        alert('برای استفاده از دکمه ارسال مستقیم، لطفاً ابتدا کلید Anthropic API Key را در بخش تنظیمات وارد کنید. یا می‌توانید به سادگی دکمه «کپی برای Claude» را بزنید و در کلود پیست کنید.');
-        openSettingsModal();
+        alert('کلید Anthropic API Key وارد نشده است. می‌توانید پرامپت را با دکمه کپی بردارید.');
         return;
       }
 
@@ -544,7 +758,7 @@
             'content-type': 'application/json'
           },
           body: JSON.stringify({
-            model: claudeModel,
+            model: 'claude-3-5-sonnet-20241022',
             max_tokens: 1500,
             system: "You are an elite Product Management Copilot. Deliver ultra-dense, actionable outputs in markdown tables or bullet points. Avoid polite conversational filler.",
             messages: [{ role: "user", content: prompt }]
@@ -557,12 +771,15 @@
           claudeContent.innerHTML = marked.parse(textBlocks);
           btn.innerHTML = '<span>✅ پاسخ آمد</span>';
           
-          // update local history
-          const history = getStoredHistory();
-          const item = history.find(h => h.id === id);
-          if (item) {
-            item.claude_response = textBlocks;
-            localStorage.setItem('pm_chat_history', JSON.stringify(history));
+          // update session history
+          const sessions = getStoredSessions();
+          const session = sessions.find(s => s.id === currentSessionId);
+          if (session) {
+            const item = session.messages.find(m => m.id === id);
+            if (item) {
+              item.claude_response = textBlocks;
+              saveSessions(sessions);
+            }
           }
         } else {
           const err = await resp.json().catch(() => ({}));
