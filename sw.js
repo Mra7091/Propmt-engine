@@ -1,17 +1,18 @@
-const CACHE_NAME = 'pm-engine-v1';
+const CACHE_NAME = 'pm-engine-v2.3.0';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './version.json',
   './icon-192.png',
   './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).catch(() => {})
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -20,18 +21,45 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first for API, cache first for static
-  if (event.request.url.includes('googleapis.com') || event.request.url.includes('anthropic.com')) {
+  if (event.request.method !== 'GET') return;
+  const url = event.request.url;
+
+  // Never cache AI API requests
+  if (url.includes('googleapis.com') || url.includes('anthropic.com')) {
     event.respondWith(fetch(event.request));
-  } else {
+    return;
+  }
+
+  // Always network-first for index.html, version.json, sw.js so updates apply immediately!
+  if (url.endsWith('.html') || url.endsWith('/') || url.includes('version.json')) {
     event.respondWith(
-      caches.match(event.request).then((response) => response || fetch(event.request))
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
+    return;
+  }
+
+  // Cache-first for images and icons
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
+  );
+});
+
+// Message listener for manual force-update from app
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
   }
 });

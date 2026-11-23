@@ -36,107 +36,170 @@
       font-family: 'Vazirmatn', sans-serif;
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
+      min-width: 320px;
     }
     .ltr-box { direction: ltr !important; text-align: left !important; }
-    .prose table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.8rem; }
-    .prose th, .prose td { border: 1px solid #334155; padding: 6px 10px; }
+    .prose table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.8em; }
+    .prose th, .prose td { border: 1px solid #334155; padding: 5px 8px; }
     .prose th { background-color: #1e293b; color: #38bdf8; }
-    .prose ul { list-style-type: disc; padding-right: 1.25rem; margin: 0.5rem 0; }
-    .prose ol { list-style-type: decimal; padding-right: 1.25rem; margin: 0.5rem 0; }
-    .prose h1, .prose h2, .prose h3 { color: #f8fafc; font-weight: 700; margin-top: 0.75rem; margin-bottom: 0.25rem; }
-    .prose p { margin-bottom: 0.5rem; line-height: 1.6; }
+    .prose ul { list-style-type: disc; padding-right: 1.25rem; margin: 0.4rem 0; }
+    .prose ol { list-style-type: decimal; padding-right: 1.25rem; margin: 0.4rem 0; }
+    .prose h1, .prose h2, .prose h3 { color: #f8fafc; font-weight: 700; margin-top: 0.6rem; margin-bottom: 0.2rem; }
+    .prose p { margin-bottom: 0.4rem; line-height: 1.6; }
+    
+    /* Dynamic Font Sizes */
+    body.font-sm { font-size: 11px; }
+    body.font-sm .chat-text { font-size: 11px !important; }
+    body.font-sm .prose { font-size: 11px !important; }
+    body.font-sm .prompt-box { font-size: 10px !important; }
+
+    body.font-base { font-size: 13px; }
+    body.font-base .chat-text { font-size: 13px !important; }
+    body.font-base .prose { font-size: 13px !important; }
+    body.font-base .prompt-box { font-size: 11px !important; }
+
+    body.font-lg { font-size: 15px; }
+    body.font-lg .chat-text { font-size: 15px !important; }
+    body.font-lg .prose { font-size: 15px !important; }
+    body.font-lg .prompt-box { font-size: 12px !important; }
+
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Dragging item visual */
+    .session-dragging {
+      opacity: 0.4;
+      border: 1px dashed #10b981 !important;
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex overflow-hidden select-none">
+<body class="bg-slate-950 text-slate-100 h-screen flex overflow-hidden select-none font-base">
+
+  <!-- Floating Update Notification Toast -->
+  <div id="updateToast" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 border border-emerald-400 text-white px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-2 text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4">
+    <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+    <span id="updateToastText">نسخه جدید برنامه دریافت شد! در حال به‌روزرسانی خودکار...</span>
+    <button onclick="window.location.reload(true)" class="mr-2 px-2 py-0.5 bg-white text-emerald-800 rounded-lg text-[10px]">هم‌اکنون بارگذاری</button>
+  </div>
 
   <!-- Mobile Backdrop -->
   <div id="mobileBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-30 hidden md:hidden transition-opacity"></div>
 
   <!-- Sidebar: Chat Topics List -->
-  <aside id="sidebar" class="fixed md:static top-0 bottom-0 right-0 z-40 w-72 bg-slate-900 border-l border-slate-800 flex flex-col h-full transform translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out shrink-0">
+  <aside id="sidebar" class="fixed md:static top-0 bottom-0 right-0 z-40 bg-slate-900 border-l border-slate-800 flex flex-col h-full transform translate-x-full md:translate-x-0 transition-transform md:transition-none duration-200 ease-in-out shrink-0 min-w-0" style="width: 270px;">
     
-    <!-- Sidebar Header: New Chat -->
-    <div class="p-3.5 border-b border-slate-800/80 flex items-center justify-between gap-2">
-      <button onclick="createNewSession()" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Sidebar Header: New Chat & Actions -->
+    <div class="p-2.5 sm:p-3 border-b border-slate-800/80 flex items-center justify-between gap-1.5 shrink-0">
+      <button onclick="createNewSession()" class="flex-1 py-1.5 px-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition truncate">
+        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
         </svg>
-        <span>گفتگوی جدید</span>
+        <span class="truncate">گفتگوی جدید</span>
       </button>
 
-      <button onclick="toggleSidebar(false)" class="md:hidden p-2 text-slate-400 hover:text-slate-200 rounded-lg">
+      <!-- Collapse / Hide Sidebar button for desktop -->
+      <button onclick="toggleDesktopSidebar()" class="hidden md:flex p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition" title="کوچک کردن / بستن منو">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+        </svg>
+      </button>
+
+      <!-- Close Sidebar button for mobile -->
+      <button onclick="toggleSidebar(false)" class="md:hidden p-1.5 text-slate-400 hover:text-slate-200 rounded-lg">
         ✕
       </button>
     </div>
 
-    <!-- Sessions List -->
-    <div class="flex-1 overflow-y-auto p-2 space-y-1" id="sessionsList">
-      <!-- Session items injected here -->
+    <!-- Sessions List (Supports Reordering, Renaming & Deletion) -->
+    <div class="flex-1 overflow-y-auto p-1.5 space-y-1 min-w-0" id="sessionsList">
+      <!-- Session items injected dynamically -->
     </div>
 
     <!-- Sidebar Footer -->
-    <div class="p-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-      <button onclick="openSettingsModal()" class="flex items-center gap-1.5 hover:text-slate-200 py-1 px-2 rounded-lg hover:bg-slate-800 transition">
-        <span>⚙️ تنظیمات کلیدها</span>
+    <div class="p-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 shrink-0">
+      <button onclick="openSettingsModal()" class="flex items-center gap-1 hover:text-slate-200 py-1 px-1.5 rounded-lg hover:bg-slate-800 transition truncate" title="تنظیمات API">
+        <span>⚙️ تنظیمات</span>
       </button>
-      <button onclick="clearAllSessions()" class="text-slate-500 hover:text-rose-400 py-1 px-2 rounded-lg transition" title="حذف تمام گفتگوها">
-        حذف همه
-      </button>
+      
+      <div class="flex items-center gap-1">
+        <button onclick="clearAllSessions()" class="text-slate-500 hover:text-rose-400 py-1 px-1.5 rounded-lg transition text-[11px]" title="حذف تمام گفتگوها">
+          حذف همه
+        </button>
+      </div>
     </div>
 
   </aside>
 
-  <!-- Main Chat Content -->
-  <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950 relative">
+  <!-- Sidebar Resizer Handle (Desktop Only) -->
+  <div id="sidebarResizer" class="hidden md:block w-1.5 hover:w-2 bg-slate-800/60 hover:bg-emerald-500 cursor-col-resize transition-all shrink-0 z-30 select-none" title="تغییر عرض منوی چت‌ها با کشیدن موس"></div>
+
+  <!-- Main Chat Content Area -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950 relative min-w-0">
 
     <!-- Top Navigation Bar -->
-    <header class="h-14 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur px-3 sm:px-6 flex items-center justify-between shrink-0">
-      <div class="flex items-center gap-2.5">
+    <header class="h-12 sm:h-14 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur px-2.5 sm:px-5 flex items-center justify-between shrink-0 gap-2 min-w-0">
+      
+      <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
         <!-- Mobile Sidebar Toggle -->
-        <button onclick="toggleSidebar(true)" class="md:hidden p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-xl transition">
+        <button onclick="toggleSidebar(true)" class="md:hidden p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-xl transition shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
 
-        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+        <!-- Desktop Sidebar Show Button (when collapsed) -->
+        <button id="sidebarShowBtn" onclick="toggleDesktopSidebar()" class="hidden p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition shrink-0" title="باز کردن منوی چت‌ها">
+          <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+          </svg>
+        </button>
+
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs sm:text-sm shadow-sm shrink-0">
           ⚡
         </div>
         
-        <!-- Active Session Title -->
-        <div class="overflow-hidden">
-          <h1 id="headerSessionTitle" class="font-bold text-xs sm:text-sm tracking-wide text-slate-200 truncate max-w-[200px] sm:max-w-xs">
+        <!-- Active Session Title (Clickable to Inline Rename) -->
+        <div class="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer group" onclick="startHeaderRename()" title="کلیک کنید تا نام این چت را تغییر دهید">
+          <h1 id="headerSessionTitle" class="font-bold text-xs sm:text-sm tracking-wide text-slate-200 truncate group-hover:text-emerald-400 transition">
             گفتگوی جدید
           </h1>
-          <div class="text-[10px] text-slate-400 font-mono hidden sm:block">PM Prompt Engine</div>
+          <span class="text-slate-500 group-hover:text-emerald-400 text-xs shrink-0 transition">✏️</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <!-- New Chat Quick Button on Desktop Header -->
-        <button onclick="createNewSession()" class="hidden md:flex items-center gap-1 px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium border border-slate-700/60 transition">
-          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-          </svg>
-          <span>چت جدید</span>
+      <!-- Action Buttons & Font Size Controls -->
+      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+        
+        <!-- Font Size Adjuster Pill -->
+        <div class="flex items-center bg-slate-800/90 border border-slate-700/60 rounded-xl p-0.5 text-[10px] sm:text-xs text-slate-300">
+          <button onclick="setFontSize('font-sm')" id="btnFontSm" class="px-1.5 sm:px-2 py-0.5 rounded-lg hover:text-white transition" title="سایز متن کوچک">A-</button>
+          <button onclick="setFontSize('font-base')" id="btnFontBase" class="px-1.5 sm:px-2 py-0.5 rounded-lg hover:text-white transition font-bold text-emerald-400" title="سایز متن متوسط">A</button>
+          <button onclick="setFontSize('font-lg')" id="btnFontLg" class="px-1.5 sm:px-2 py-0.5 rounded-lg hover:text-white transition" title="سایز متن بزرگ">A+</button>
+        </div>
+
+        <!-- Direct Install Button -->
+        <button id="installAppBtn" onclick="triggerInstallPrompt()" class="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow-sm transition shrink-0" title="نصب روی دسکتاپ">
+          <span class="hidden sm:inline">📲 نصب نرم‌افزار</span>
+          <span class="sm:hidden">📲 نصب</span>
         </button>
 
         <!-- Settings Button -->
-        <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-xs font-medium text-slate-200 flex items-center gap-1.5 transition">
-          <span>⚙️ تنظیمات</span>
+        <button onclick="openSettingsModal()" class="p-1.5 sm:px-2.5 sm:py-1 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-xs font-medium text-slate-200 flex items-center gap-1 transition shrink-0" title="تنظیمات کلید API">
+          <span>⚙️</span>
+          <span class="hidden md:inline">تنظیمات</span>
         </button>
       </div>
+
     </header>
 
     <!-- Chat Messages Stream -->
-    <main id="chatContainer" class="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-4xl mx-auto w-full select-text">
+    <main id="chatContainer" class="flex-1 overflow-y-auto px-2.5 sm:px-5 py-3 sm:py-5 space-y-3 sm:space-y-5 max-w-4xl mx-auto w-full select-text min-w-0">
       
       <!-- Empty state -->
-      <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-60">
+      <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-2.5 opacity-60">
         <div class="text-3xl">💡</div>
         <h3 class="text-sm sm:text-base font-bold text-slate-300">نیازمندی یا تسک محصولی خود را بنویسید</h3>
         <p class="text-xs text-slate-400 max-w-xs sm:max-w-sm leading-relaxed">
@@ -147,14 +210,14 @@
     </main>
 
     <!-- Input Bar -->
-    <footer class="border-t border-slate-800/80 bg-slate-900/80 backdrop-blur p-3 sm:p-4 shrink-0">
+    <footer class="border-t border-slate-800/80 bg-slate-900/80 backdrop-blur p-2 sm:p-3 shrink-0">
       <div class="max-w-4xl mx-auto">
-        <div class="flex items-end gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-1.5 sm:p-2 focus-within:border-emerald-500/80 focus-within:ring-1 focus-within:ring-emerald-500/40 transition">
+        <div class="flex items-end gap-1.5 sm:gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-1 sm:p-1.5 focus-within:border-emerald-500/80 focus-within:ring-1 focus-within:ring-emerald-500/40 transition">
           <textarea
             id="userInput"
             rows="1"
             placeholder="تسک یا نیازمندی محصولی خود را بنویسید..."
-            class="w-full bg-transparent resize-none border-0 focus:outline-none text-slate-100 placeholder-slate-500 text-xs sm:text-sm p-2 max-h-32 sm:max-h-36 leading-relaxed"
+            class="w-full bg-transparent resize-none border-0 focus:outline-none text-slate-100 placeholder-slate-500 text-xs sm:text-sm p-1.5 sm:p-2 max-h-28 sm:max-h-36 leading-relaxed"
             onkeydown="handleKeyDown(event)"
             oninput="autoGrow(this)"
           ></textarea>
@@ -162,7 +225,7 @@
           <button
             id="sendBtn"
             onclick="sendMessage()"
-            class="px-3.5 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shrink-0 disabled:opacity-40"
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shrink-0 disabled:opacity-40"
           >
             <span>ارسال</span>
             <svg class="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,14 +239,17 @@
   </div>
 
   <!-- Settings Modal (Clean & Simplified) -->
-  <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-sm text-slate-200">⚙️ تنظیمات API</h3>
+  <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-4 sm:p-6 space-y-3.5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="font-bold text-sm text-slate-200 flex items-center gap-1.5">
+          <span>⚙️ تنظیمات</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">نسخه v2.3.0</span>
+        </h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 p-1">✕</button>
       </div>
 
-      <div class="space-y-4 text-xs">
+      <div class="space-y-3.5 text-xs">
         <div>
           <label class="font-bold text-emerald-400 block mb-1">کلید Google Gemini API Key (الزامی):</label>
           <input
@@ -209,6 +275,13 @@
             کاملاً اختیاری است. فقط در صورتی که بخواهید دکمه «ارسال مستقیم به Claude» هم فعال باشد آن را وارد کنید (در غیر این صورت فقط با دکمه کپی پرامپت کار می‌کنید).
           </p>
         </div>
+
+        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+          <span class="text-slate-400 text-[11px]">بررسی و اعمال آخرین نسخه:</span>
+          <button type="button" onclick="forceCheckUpdateAndReload()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] rounded-lg border border-slate-700 transition">
+            🔄 بررسی نسخه جدید و بازنشانی
+          </button>
+        </div>
       </div>
 
       <div class="pt-2 flex justify-end gap-2 border-t border-slate-800">
@@ -221,11 +294,116 @@
   </div>
 
   <script>
-    // Register PWA Service Worker
+    const APP_VERSION = "2.3.0";
+
+    // --- Auto-Update & Smart Cache System ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+        navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`, { updateViaCache: 'none' })
+          .then((registration) => {
+            // Check for updates on load
+            registration.update();
+
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showUpdateToast('نسخه جدید برنامه دانلود شد! در حال اعمال به‌روزرسانی...');
+                  setTimeout(() => {
+                    newWorker.postMessage({ action: 'skipWaiting' });
+                  }, 1200);
+                }
+              });
+            });
+          })
+          .catch(err => console.log('SW registration failed:', err));
       });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload(true);
+        }
+      });
+    }
+
+    // Auto-check version from version.json
+    async function checkRemoteVersion() {
+      try {
+        const resp = await fetch(`./version.json?t=${Date.now()}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.version && data.version !== APP_VERSION) {
+            console.log(`Update available: ${data.version} (current: ${APP_VERSION})`);
+            showUpdateToast(`نسخه جدید (${data.version}) آماده است! در حال اعمال...`);
+            setTimeout(() => {
+              forceCheckUpdateAndReload();
+            }, 1000);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Check version on visibility change (when user returns to the app/tab)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        checkRemoteVersion();
+      }
+    });
+
+    function showUpdateToast(msg) {
+      const toast = document.getElementById('updateToast');
+      const text = document.getElementById('updateToastText');
+      if (text) text.textContent = msg;
+      if (toast) {
+        toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+        toast.classList.add('opacity-100', 'translate-y-0');
+      }
+    }
+
+    async function forceCheckUpdateAndReload() {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let r of registrations) {
+          await r.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (let k of keys) {
+          await caches.delete(k);
+        }
+      }
+      localStorage.setItem('pm_installed_version', APP_VERSION);
+      window.location.reload(true);
+    }
+
+    // Install Prompt Handler
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('installAppBtn');
+      if (btn) btn.classList.remove('hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      document.getElementById('installAppBtn')?.classList.add('hidden');
+    });
+
+    async function triggerInstallPrompt() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          deferredPrompt = null;
+          document.getElementById('installAppBtn')?.classList.add('hidden');
+        }
+      } else {
+        alert('برای نصب روی دسکتاپ:\n۱. در منوی سه نقطه بالای کروم کلیک کنید.\n۲. گزینه Save and share (یا More tools) و سپس Create shortcut را بزنید.\n۳. تیک گزینه Open as window را حتماً بزنید تا مثل یک اپ مجزا باز شود.');
+      }
     }
 
     marked.setOptions({ breaks: true, gfm: true });
@@ -255,15 +433,104 @@
     ];
 
     let currentSessionId = null;
+    let draggedSessionIndex = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       loadSettings();
+      initFontAndLayout();
       initSessions();
+      initSidebarResizer();
+      checkRemoteVersion();
     });
 
     function autoGrow(element) {
       element.style.height = 'auto';
       element.style.height = (element.scrollHeight) + 'px';
+    }
+
+    // --- Font Size Manager ---
+    function setFontSize(sizeClass) {
+      document.body.classList.remove('font-sm', 'font-base', 'font-lg');
+      document.body.classList.add(sizeClass);
+      localStorage.setItem('pm_font_size', sizeClass);
+
+      // Update button highlights
+      ['btnFontSm', 'btnFontBase', 'btnFontLg'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('font-bold', 'text-emerald-400');
+      });
+
+      if (sizeClass === 'font-sm') document.getElementById('btnFontSm')?.classList.add('font-bold', 'text-emerald-400');
+      else if (sizeClass === 'font-base') document.getElementById('btnFontBase')?.classList.add('font-bold', 'text-emerald-400');
+      else if (sizeClass === 'font-lg') document.getElementById('btnFontLg')?.classList.add('font-bold', 'text-emerald-400');
+    }
+
+    function initFontAndLayout() {
+      const savedFont = localStorage.getItem('pm_font_size') || 'font-base';
+      setFontSize(savedFont);
+
+      // Restore desktop sidebar width
+      const savedWidth = localStorage.getItem('pm_sidebar_width');
+      if (savedWidth) {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && window.innerWidth >= 768) {
+          sidebar.style.width = savedWidth + 'px';
+        }
+      }
+    }
+
+    // --- Resizable Sidebar System ---
+    function initSidebarResizer() {
+      const resizer = document.getElementById('sidebarResizer');
+      const sidebar = document.getElementById('sidebar');
+      if (!resizer || !sidebar) return;
+
+      let isResizing = false;
+
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        // In RTL layout, sidebar is on the right side of screen
+        const newWidth = window.innerWidth - e.clientX;
+        if (newWidth >= 160 && newWidth <= 450) {
+          sidebar.style.width = newWidth + 'px';
+          localStorage.setItem('pm_sidebar_width', newWidth);
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        }
+      });
+    }
+
+    // Toggle Desktop Sidebar Collapse
+    function toggleDesktopSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const resizer = document.getElementById('sidebarResizer');
+      const showBtn = document.getElementById('sidebarShowBtn');
+
+      if (!sidebar) return;
+
+      if (sidebar.classList.contains('md:hidden')) {
+        // Expand
+        sidebar.classList.remove('md:hidden');
+        if (resizer) resizer.classList.remove('md:hidden');
+        if (showBtn) showBtn.classList.add('hidden');
+      } else {
+        // Collapse
+        sidebar.classList.add('md:hidden');
+        if (resizer) resizer.classList.add('md:hidden');
+        if (showBtn) showBtn.classList.remove('hidden');
+      }
     }
 
     // Toggle Sidebar on mobile
@@ -287,7 +554,6 @@
       document.getElementById('cfgGeminiKey').value = geminiKey;
       document.getElementById('cfgAnthropicKey').value = anthropicKey;
 
-      // Auto-load from local server if empty
       if (!geminiKey) {
         fetch('/api/config')
           .then(r => r.json())
@@ -318,11 +584,10 @@
       localStorage.setItem('pm_anthropic_key', anthropicKey);
 
       closeSettingsModal();
-      // Re-render current messages to update visibility of direct send button
       renderCurrentSessionMessages();
     }
 
-    // Sessions Management
+    // --- Sessions & Topics Manager ---
     function getStoredSessions() {
       try {
         const data = JSON.parse(localStorage.getItem('pm_sessions') || '[]');
@@ -390,7 +655,6 @@
       if (event) event.stopPropagation();
       let sessions = getStoredSessions();
       if (sessions.length <= 1) {
-        // If it's the last session, just clear its messages
         sessions[0].title = 'گفتگوی جدید';
         sessions[0].messages = [];
         currentSessionId = sessions[0].id;
@@ -405,39 +669,171 @@
       renderCurrentSessionMessages();
     }
 
+    // Reorder sessions Up / Down
+    function moveSession(index, direction, event) {
+      if (event) event.stopPropagation();
+      const sessions = getStoredSessions();
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= sessions.length) return;
+
+      const temp = sessions[index];
+      sessions[index] = sessions[targetIndex];
+      sessions[targetIndex] = temp;
+
+      saveSessions(sessions);
+    }
+
+    // Inline Rename in Sidebar
+    function startInlineRename(sessionId, event) {
+      if (event) event.stopPropagation();
+      const session = getStoredSessions().find(s => s.id === sessionId);
+      if (!session) return;
+
+      const titleEl = document.getElementById(`session_title_${sessionId}`);
+      const actionsEl = document.getElementById(`session_actions_${sessionId}`);
+      if (!titleEl) return;
+
+      const currentTitle = session.title || 'گفتگوی جدید';
+      titleEl.innerHTML = `
+        <input 
+          id="rename_input_${sessionId}"
+          type="text" 
+          value="${escapeAttr(currentTitle)}"
+          class="w-full bg-slate-950 border border-emerald-500 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+          onclick="event.stopPropagation()"
+          onkeydown="handleRenameKey(event, '${sessionId}')"
+        />
+      `;
+
+      if (actionsEl) {
+        actionsEl.innerHTML = `
+          <button onclick="saveInlineRename('${sessionId}', event)" class="p-1 text-emerald-400 hover:text-emerald-300 font-bold" title="ذخیره">✓</button>
+          <button onclick="renderSessionsList()" class="p-1 text-slate-400 hover:text-slate-200" title="انصراف">✕</button>
+        `;
+      }
+
+      const input = document.getElementById(`rename_input_${sessionId}`);
+      input?.focus();
+      input?.select();
+    }
+
+    function handleRenameKey(event, sessionId) {
+      if (event.key === 'Enter') {
+        saveInlineRename(sessionId, event);
+      } else if (event.key === 'Escape') {
+        renderSessionsList();
+      }
+    }
+
+    function saveInlineRename(sessionId, event) {
+      if (event) event.stopPropagation();
+      const input = document.getElementById(`rename_input_${sessionId}`);
+      if (!input) return;
+
+      const newTitle = input.value.trim() || 'گفتگوی جدید';
+      const sessions = getStoredSessions();
+      const session = sessions.find(s => s.id === sessionId);
+      if (session) {
+        session.title = newTitle;
+        saveSessions(sessions);
+        if (currentSessionId === sessionId) {
+          document.getElementById('headerSessionTitle').textContent = newTitle;
+        }
+      }
+    }
+
+    // Header Title Inline Rename
+    function startHeaderRename() {
+      const session = getCurrentSession();
+      if (!session) return;
+
+      const newTitle = prompt('نام جدید این گفتگو را وارد کنید:', session.title || '');
+      if (newTitle !== null && newTitle.trim() !== '') {
+        session.title = newTitle.trim();
+        const sessions = getStoredSessions();
+        const found = sessions.find(s => s.id === session.id);
+        if (found) found.title = newTitle.trim();
+        saveSessions(sessions);
+        document.getElementById('headerSessionTitle').textContent = newTitle.trim();
+      }
+    }
+
     function clearAllSessions() {
       if (!confirm('آیا تمام گفتگوها و پرامپت‌ها پاک شوند؟')) return;
       localStorage.removeItem('pm_sessions');
       initSessions();
     }
 
+    // Render Sessions List (with Drag-and-Drop and Up/Down arrows)
     function renderSessionsList() {
       const sessions = getStoredSessions();
       const container = document.getElementById('sessionsList');
       container.innerHTML = '';
 
-      sessions.forEach(sess => {
+      sessions.forEach((sess, index) => {
         const isActive = sess.id === currentSessionId;
         const div = document.createElement('div');
+        div.id = `session_item_${sess.id}`;
+        div.draggable = true;
         div.onclick = () => selectSession(sess.id);
-        div.className = `group flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition ${
+        div.className = `group flex items-center justify-between p-1.5 sm:p-2 rounded-xl cursor-pointer text-xs transition min-w-0 ${
           isActive 
             ? 'bg-slate-800 text-emerald-400 font-bold border border-slate-700/80 shadow-sm' 
             : 'text-slate-300 hover:bg-slate-800/50 hover:text-slate-100'
         }`;
 
+        // Drag and drop handlers
+        div.ondragstart = (e) => {
+          draggedSessionIndex = index;
+          div.classList.add('session-dragging');
+        };
+        div.ondragend = () => {
+          div.classList.remove('session-dragging');
+        };
+        div.ondragover = (e) => e.preventDefault();
+        div.ondrop = (e) => {
+          e.preventDefault();
+          if (draggedSessionIndex !== null && draggedSessionIndex !== index) {
+            const allSessions = getStoredSessions();
+            const dragged = allSessions.splice(draggedSessionIndex, 1)[0];
+            allSessions.splice(index, 0, dragged);
+            saveSessions(allSessions);
+          }
+        };
+
         div.innerHTML = `
-          <div class="flex items-center gap-2 overflow-hidden flex-1">
-            <span class="${isActive ? 'text-emerald-400' : 'text-slate-500'}">💬</span>
-            <span class="truncate">${escapeHtml(sess.title || 'گفتگوی جدید')}</span>
+          <div class="flex items-center gap-1.5 overflow-hidden flex-1 min-w-0">
+            <span class="${isActive ? 'text-emerald-400' : 'text-slate-500'} shrink-0 text-[11px]">💬</span>
+            <span id="session_title_${sess.id}" class="truncate select-none text-[11px] sm:text-xs" ondblclick="startInlineRename('${sess.id}', event)">
+              ${escapeHtml(sess.title || 'گفتگوی جدید')}
+            </span>
           </div>
-          <button 
-            onclick="deleteSession('${sess.id}', event)" 
-            title="حذف این گفتگو" 
-            class="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-400 text-slate-500 rounded transition shrink-0 ml-1"
-          >
-            🗑️
-          </button>
+
+          <div id="session_actions_${sess.id}" class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0 ml-1">
+            <!-- Move Up -->
+            ${index > 0 ? `
+              <button onclick="moveSession(${index}, -1, event)" title="انتقال به بالا" class="p-1 hover:text-emerald-400 text-slate-500 rounded text-[10px]">
+                ▲
+              </button>
+            ` : ''}
+
+            <!-- Move Down -->
+            ${index < sessions.length - 1 ? `
+              <button onclick="moveSession(${index}, 1, event)" title="انتقال به پایین" class="p-1 hover:text-emerald-400 text-slate-500 rounded text-[10px]">
+                ▼
+              </button>
+            ` : ''}
+
+            <!-- Rename -->
+            <button onclick="startInlineRename('${sess.id}', event)" title="تغییر نام" class="p-1 hover:text-emerald-400 text-slate-500 rounded text-[10px]">
+              ✏️
+            </button>
+
+            <!-- Delete -->
+            <button onclick="deleteSession('${sess.id}', event)" title="حذف این گفتگو" class="p-1 hover:text-rose-400 text-slate-500 rounded text-[10px]">
+              🗑️
+            </button>
+          </div>
         `;
         container.appendChild(div);
       });
@@ -460,7 +856,7 @@
       const messages = session.messages || [];
       if (messages.length === 0) {
         container.innerHTML = `
-          <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-60">
+          <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-2.5 opacity-60">
             <div class="text-3xl">💡</div>
             <h3 class="text-sm sm:text-base font-bold text-slate-300">نیازمندی یا تسک محصولی خود را بنویسید</h3>
             <p class="text-xs text-slate-400 max-w-xs sm:max-w-sm leading-relaxed">
@@ -483,8 +879,8 @@
 
       // Auto update title on first message
       if (session.messages.length === 0 || session.title === 'گفتگوی جدید') {
-        const words = turn.user.trim().split(/\s+/).slice(0, 6).join(' ');
-        session.title = words.length > 35 ? words.substring(0, 35) + '...' : words;
+        const words = turn.user.trim().split(/\s+/).slice(0, 5).join(' ');
+        session.title = words.length > 25 ? words.substring(0, 25) + '...' : words;
         document.getElementById('headerSessionTitle').textContent = session.title;
       }
 
@@ -619,7 +1015,7 @@
       const div = document.createElement('div');
       div.className = 'flex justify-end';
       div.innerHTML = `
-        <div class="max-w-2xl bg-emerald-950/40 border border-emerald-800/50 rounded-2xl rounded-tl-sm px-4 py-2.5 sm:py-3 text-emerald-100 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+        <div class="max-w-2xl bg-emerald-950/40 border border-emerald-800/50 rounded-2xl rounded-tl-sm px-3.5 py-2 sm:px-4 sm:py-2.5 text-emerald-100 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap chat-text">
           ${escapeHtml(text)}
         </div>
       `;
@@ -634,7 +1030,7 @@
       div.id = id;
       div.className = 'flex justify-start';
       div.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 sm:py-3 text-slate-400 text-xs flex items-center gap-2">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl px-3 py-2 text-slate-400 text-xs flex items-center gap-2">
           <div class="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
           <span>جمینای در حال تحلیل و آماده‌سازی پرامپت کلود...</span>
         </div>
@@ -649,7 +1045,7 @@
       const div = document.createElement('div');
       div.className = 'flex justify-start';
       div.innerHTML = `
-        <div class="max-w-2xl bg-rose-950/30 border border-rose-800/50 rounded-2xl p-4 text-rose-300 text-xs space-y-2">
+        <div class="max-w-2xl bg-rose-950/30 border border-rose-800/50 rounded-2xl p-3 sm:p-4 text-rose-300 text-xs space-y-1.5">
           <div class="font-bold flex items-center gap-1.5">⚠️ ${escapeHtml(msg)}</div>
           <button onclick="openSettingsModal()" class="text-xs text-rose-400 underline">بررسی تنظیمات API</button>
         </div>
@@ -661,7 +1057,7 @@
     function renderAssistantTurn(id, geminiText, claudePrompt, claudeResponse) {
       const container = document.getElementById('chatContainer');
       const div = document.createElement('div');
-      div.className = 'flex justify-start w-full';
+      div.className = 'flex justify-start w-full min-w-0';
 
       const parsedGemini = marked.parse(geminiText || '');
       const hasAnthropicKey = !!localStorage.getItem('pm_anthropic_key');
@@ -670,32 +1066,32 @@
       if (claudePrompt) {
         promptBoxHtml = `
           <!-- Dedicated Card: Claude Ready Prompt -->
-          <div class="mt-3 sm:mt-4 pt-3 border-t border-slate-800">
-            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 space-y-2">
+          <div class="mt-2.5 sm:mt-3.5 pt-2.5 border-t border-slate-800">
+            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-2.5 sm:p-3 space-y-2">
               
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-emerald-400 flex items-center gap-1">
+              <div class="flex items-center justify-between text-xs gap-1">
+                <span class="font-bold text-emerald-400 flex items-center gap-1 shrink-0 text-[11px] sm:text-xs">
                   <span>🚀 پرامپت آماده برای Claude</span>
                 </span>
                 
-                <div class="flex items-center gap-1.5">
-                  <button id="copyBtn_${id}" onclick="copyPrompt('${id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 transition shadow-sm">
-                    <span>📋 کپی برای Claude</span>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button id="copyBtn_${id}" onclick="copyPrompt('${id}')" class="px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg font-bold text-[10px] sm:text-[11px] flex items-center gap-1 transition shadow-sm">
+                    <span>📋 کپی</span>
                   </button>
                   ${hasAnthropicKey ? `
-                    <button id="sendClaudeBtn_${id}" onclick="sendDirectToClaude('${id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-lg font-medium text-[11px] border border-slate-700 flex items-center gap-1 transition">
-                      <span>🚀 ارسال مستقیم</span>
+                    <button id="sendClaudeBtn_${id}" onclick="sendDirectToClaude('${id}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-lg font-medium text-[10px] sm:text-[11px] border border-slate-700 flex items-center gap-1 transition">
+                      <span>🚀 ارسال</span>
                     </button>
                   ` : ''}
                 </div>
               </div>
 
-              <textarea id="promptText_${id}" readonly class="w-full h-24 sm:h-28 bg-slate-900 border border-slate-800/60 rounded-lg p-2 sm:p-2.5 text-[11px] font-mono text-emerald-300 resize-none ltr-box focus:outline-none">${escapeHtml(claudePrompt)}</textarea>
+              <textarea id="promptText_${id}" readonly class="w-full h-20 sm:h-24 bg-slate-900 border border-slate-800/60 rounded-lg p-2 text-[10px] sm:text-[11px] font-mono text-emerald-300 resize-none ltr-box focus:outline-none prompt-box">${escapeHtml(claudePrompt)}</textarea>
 
               <!-- Claude Direct Response Box -->
               <div id="claudeBox_${id}" class="${claudeResponse ? '' : 'hidden'} mt-2 pt-2 border-t border-slate-800/60">
                 <div class="text-[11px] font-bold text-[#cc785c] mb-1">پاسخ دریافتی از Claude:</div>
-                <div id="claudeContent_${id}" class="prose text-xs text-slate-300 bg-slate-900/60 border border-slate-800 p-3 rounded-lg max-w-none">
+                <div id="claudeContent_${id}" class="prose text-xs text-slate-300 bg-slate-900/60 border border-slate-800 p-2.5 rounded-lg max-w-none">
                   ${claudeResponse ? marked.parse(claudeResponse) : ''}
                 </div>
               </div>
@@ -706,8 +1102,8 @@
       }
 
       div.innerHTML = `
-        <div class="w-full max-w-3xl bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 sm:p-5 text-slate-200 shadow-sm space-y-2">
-          <div class="prose text-xs leading-relaxed max-w-none text-slate-200">
+        <div class="w-full max-w-3xl bg-slate-900/70 border border-slate-800/90 rounded-2xl p-3 sm:p-5 text-slate-200 shadow-sm space-y-1.5 min-w-0">
+          <div class="prose text-xs sm:text-sm leading-relaxed max-w-none text-slate-200">
             ${parsedGemini}
           </div>
           ${promptBoxHtml}
@@ -799,6 +1195,9 @@
 
     function escapeHtml(str) {
       return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeAttr(str) {
+      return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
   </script>
 </body>
