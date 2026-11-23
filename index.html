@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>PM Prompt Engine</title>
   
+  <!-- Anti-Cache Meta Tags -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#020617">
@@ -244,7 +249,7 @@
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
         <h3 class="font-bold text-sm text-slate-200 flex items-center gap-1.5">
           <span>⚙️ تنظیمات</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">نسخه v2.3.0</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">نسخه v2.4.0</span>
         </h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 p-1">✕</button>
       </div>
@@ -277,9 +282,9 @@
         </div>
 
         <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-          <span class="text-slate-400 text-[11px]">بررسی و اعمال آخرین نسخه:</span>
-          <button type="button" onclick="forceCheckUpdateAndReload()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] rounded-lg border border-slate-700 transition">
-            🔄 بررسی نسخه جدید و بازنشانی
+          <span class="text-slate-400 text-[11px]">به‌روزرسانی و حذف کش قدیمی:</span>
+          <button type="button" onclick="forceCheckUpdateAndReload()" class="px-3 py-1.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 text-[11px] rounded-lg border border-emerald-700/60 transition font-medium">
+            🔄 پاکسازی کش و بارگذاری نسخه جدید
           </button>
         </div>
       </div>
@@ -294,7 +299,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "2.3.0";
+    const APP_VERSION = "2.4.0";
 
     // --- Auto-Update & Smart Cache System ---
     if ('serviceWorker' in navigator) {
@@ -426,10 +431,10 @@
 `;
 
     const CANDIDATE_MODELS = [
-      "gemini-3.1-flash-lite",
+      "gemini-flash-lite-latest",
+      "gemini-flash-latest",
       "gemini-3.5-flash",
-      "gemini-3.8-flash",
-      "gemini-flash-latest"
+      "gemini-3.1-flash-lite"
     ];
 
     let currentSessionId = null;
@@ -921,19 +926,30 @@
       try {
         const session = getCurrentSession();
         const messages = session ? session.messages : [];
-        const geminiHistory = [];
-        
-        messages.slice(-6).forEach(h => {
-          if (h.user) geminiHistory.push({ role: "user", parts: [{ text: h.user }] });
-          if (h.gemini) geminiHistory.push({ role: "model", parts: [{ text: h.gemini }] });
-        });
+        const cleanContents = [];
 
-        const contents = [
-          { role: "user", parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
-          { role: "model", parts: [{ text: "متوجه شدم. من به عنوان مدیر محصول ارشد تحلیل فارسی و پرامپت متراکم انگلیسی را در تگ <<<CLAUDE_PROMPT>>> ارائه می‌دهم." }] },
-          ...geminiHistory,
-          { role: "user", parts: [{ text: text }] }
-        ];
+        if (messages && messages.length > 0) {
+          let lastRole = null;
+          messages.slice(-8).forEach(h => {
+            if (h.user && lastRole !== 'user') {
+              cleanContents.push({ role: "user", parts: [{ text: h.user.trim() }] });
+              lastRole = 'user';
+            }
+            if (h.gemini && lastRole !== 'model') {
+              cleanContents.push({ role: "model", parts: [{ text: h.gemini.trim() }] });
+              lastRole = 'model';
+            }
+          });
+        }
+
+        if (cleanContents.length > 0 && cleanContents[cleanContents.length - 1].role === 'user') {
+          cleanContents.pop();
+        }
+
+        cleanContents.push({
+          role: "user",
+          parts: [{ text: text }]
+        });
 
         let result = null;
         let lastError = "";
@@ -944,11 +960,15 @@
             const resp = await fetch(url, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              signal: AbortSignal.timeout(9000),
               body: JSON.stringify({
-                contents: contents,
+                system_instruction: {
+                  parts: [{ text: GEMINI_SYSTEM_PROMPT }]
+                },
+                contents: cleanContents,
                 generationConfig: {
-                  temperature: 0.3,
-                  maxOutputTokens: 2500
+                  temperature: 0.25,
+                  maxOutputTokens: 3000
                 }
               })
             });
@@ -979,9 +999,11 @@
             } else {
               const errJson = await resp.json().catch(() => ({}));
               lastError = errJson.error?.message || `${resp.status} ${resp.statusText}`;
+              console.warn(`Model ${model} failed:`, lastError);
             }
           } catch (e) {
-            lastError = e.message || 'Network error';
+            lastError = e.message || 'Timeout / Network error';
+            console.warn(`Model ${model} exception:`, lastError);
           }
         }
 

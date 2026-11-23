@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pm-engine-v2.3.0';
+const CACHE_NAME = 'pm-engine-v2.4.0';
 const ASSETS = [
   './',
   './index.html',
@@ -35,10 +35,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Always network-first for index.html, version.json, sw.js so updates apply immediately!
+  // Always network-first (no-cache) for index.html, version.json, sw.js so updates apply immediately!
   if (url.endsWith('.html') || url.endsWith('/') || url.includes('version.json')) {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-cache' })
         .then((response) => {
           if (response.status === 200) {
             const clone = response.clone();
