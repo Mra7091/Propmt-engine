@@ -191,6 +191,12 @@
           <span class="sm:hidden">📲 نصب</span>
         </button>
 
+        <!-- Active Provider Badge -->
+        <button onclick="openSettingsModal()" id="headerProviderBadge" class="text-[11px] px-2.5 py-1 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-emerald-400 font-medium hidden sm:inline-flex items-center gap-1 transition shrink-0" title="تغییر موتور هوش مصنوعی در تنظیمات">
+          <span id="headerProviderBadgeIcon">🇮🇷</span>
+          <span id="headerProviderBadgeText">گپ‌جی‌پی‌تی</span>
+        </button>
+
         <!-- Settings Button -->
         <button onclick="openSettingsModal()" class="p-1.5 sm:px-2.5 sm:py-1 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-xs font-medium text-slate-200 flex items-center gap-1 transition shrink-0" title="تنظیمات کلید API">
           <span>⚙️</span>
@@ -248,24 +254,63 @@
     <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-4 sm:p-6 space-y-3.5 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
         <h3 class="font-bold text-sm text-slate-200 flex items-center gap-1.5">
-          <span>⚙️ تنظیمات</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">نسخه v2.4.1</span>
+          <span>⚙️ تنظیمات هوش مصنوعی</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">نسخه v2.5.0</span>
         </h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 p-1">✕</button>
       </div>
 
+      <!-- Provider Tabs -->
+      <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+        <button type="button" id="tabProviderGapGPT" onclick="setProviderTab('gapgpt')" class="flex-1 py-1.5 rounded-lg font-bold transition text-center bg-emerald-600 text-slate-950 shadow-sm">
+          🇮🇷 گپ‌جی‌پی‌تی (بدون VPN)
+        </button>
+        <button type="button" id="tabProviderGemini" onclick="setProviderTab('gemini')" class="flex-1 py-1.5 rounded-lg font-medium transition text-center text-slate-400 hover:text-slate-200">
+          🌐 گوگل Gemini (با VPN)
+        </button>
+      </div>
+
       <div class="space-y-3.5 text-xs">
-        <div>
-          <label class="font-bold text-emerald-400 block mb-1">کلید Google Gemini API Key (الزامی):</label>
-          <input
-            type="password"
-            id="cfgGeminiKey"
-            placeholder="AIzaSy..."
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:border-emerald-500 focus:outline-none"
-          />
-          <p class="text-[11px] text-slate-400 mt-1">
-            برای فکر کردن و تولید پرامپت استفاده می‌شود. دریافت رایگان از <a href="https://aistudio.google.com/apikey" target="_blank" class="text-emerald-400 underline">Google AI Studio</a>.
-          </p>
+        <!-- GapGPT Section -->
+        <div id="sectionGapGPT" class="space-y-3">
+          <div>
+            <label class="font-bold text-emerald-400 block mb-1">کلید GapGPT API Key (پیشنهادی):</label>
+            <input
+              type="password"
+              id="cfgGapGptKey"
+              placeholder="sk-..."
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:border-emerald-500 focus:outline-none"
+            />
+            <p class="text-[11px] text-slate-400 mt-1">
+              بدون نیاز به فیلترشکن در ایران. دریافت یا مشاهده کلید از پنل <a href="https://gapgpt.ir" target="_blank" class="text-emerald-400 underline">gapgpt.ir</a>.
+            </p>
+          </div>
+
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">مدل هوش مصنوعی گپ‌جی‌پی‌تی:</label>
+            <select id="cfgGapGptModel" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-xs focus:border-emerald-500 focus:outline-none">
+              <option value="gpt-4.1">GPT-4.1 (پیشنهادی - دقیق و فوق‌سریع)</option>
+              <option value="claude-fable-5-2">Claude Fable 5.2</option>
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Gemini Section -->
+        <div id="sectionGemini" class="space-y-3 hidden">
+          <div>
+            <label class="font-bold text-emerald-400 block mb-1">کلید Google Gemini API Key (رایگان):</label>
+            <input
+              type="password"
+              id="cfgGeminiKey"
+              placeholder="AIzaSy... یا AQ..."
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:border-emerald-500 focus:outline-none"
+            />
+            <p class="text-[11px] text-slate-400 mt-1">
+              رایگان از <a href="https://aistudio.google.com/apikey" target="_blank" class="text-emerald-400 underline">Google AI Studio</a>. (در ایران نیاز به فیلترشکن پایدار دارد).
+            </p>
+          </div>
         </div>
 
         <div>
@@ -277,14 +322,14 @@
             class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:border-emerald-500 focus:outline-none"
           />
           <p class="text-[11px] text-slate-400 mt-1">
-            کاملاً اختیاری است. فقط در صورتی که بخواهید دکمه «ارسال مستقیم به Claude» هم فعال باشد آن را وارد کنید (در غیر این صورت فقط با دکمه کپی پرامپت کار می‌کنید).
+            اختیاری است (فقط برای فعال شدن دکمه ارسال مستقیم به Claude).
           </p>
         </div>
 
         <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-          <span class="text-slate-400 text-[11px]">به‌روزرسانی و حذف کش قدیمی:</span>
+          <span class="text-slate-400 text-[11px]">به‌روزرسانی و حذف کش:</span>
           <button type="button" onclick="forceCheckUpdateAndReload()" class="px-3 py-1.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 text-[11px] rounded-lg border border-emerald-700/60 transition font-medium">
-            🔄 پاکسازی کش و بارگذاری نسخه جدید
+            🔄 بازنشانی کش به آخرین نسخه
           </button>
         </div>
       </div>
@@ -299,7 +344,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "2.4.1";
+    const APP_VERSION = "2.5.0";
 
     // --- Auto-Update & Smart Cache System ---
     if ('serviceWorker' in navigator) {
@@ -551,26 +596,81 @@
       }
     }
 
-    // Settings
+    // Provider Tab & Settings Management
+    let currentProvider = localStorage.getItem('pm_provider') || 'gapgpt';
+
+    function setProviderTab(prov) {
+      currentProvider = prov;
+      const tabGap = document.getElementById('tabProviderGapGPT');
+      const tabGem = document.getElementById('tabProviderGemini');
+      const secGap = document.getElementById('sectionGapGPT');
+      const secGem = document.getElementById('sectionGemini');
+
+      if (prov === 'gapgpt') {
+        tabGap.className = 'flex-1 py-1.5 rounded-lg font-bold transition text-center bg-emerald-600 text-slate-950 shadow-sm';
+        tabGem.className = 'flex-1 py-1.5 rounded-lg font-medium transition text-center text-slate-400 hover:text-slate-200';
+        secGap.classList.remove('hidden');
+        secGem.classList.add('hidden');
+      } else {
+        tabGem.className = 'flex-1 py-1.5 rounded-lg font-bold transition text-center bg-emerald-600 text-slate-950 shadow-sm';
+        tabGap.className = 'flex-1 py-1.5 rounded-lg font-medium transition text-center text-slate-400 hover:text-slate-200';
+        secGem.classList.remove('hidden');
+        secGap.classList.add('hidden');
+      }
+      updateHeaderBadge();
+    }
+
+    function updateHeaderBadge() {
+      const badgeIcon = document.getElementById('headerProviderBadgeIcon');
+      const badgeText = document.getElementById('headerProviderBadgeText');
+      const prov = localStorage.getItem('pm_provider') || 'gapgpt';
+      if (badgeIcon && badgeText) {
+        if (prov === 'gapgpt') {
+          const model = localStorage.getItem('pm_gapgpt_model') || 'gpt-4.1';
+          badgeIcon.textContent = '🇮🇷';
+          badgeText.textContent = `گپ‌جی‌پی‌تی (${model})`;
+        } else {
+          badgeIcon.textContent = '🌐';
+          badgeText.textContent = 'جمینای (گوگل)';
+        }
+      }
+    }
+
     function loadSettings() {
+      let provider = localStorage.getItem('pm_provider') || 'gapgpt';
+      let gapgptKey = localStorage.getItem('pm_gapgpt_key') || '';
+      let gapgptModel = localStorage.getItem('pm_gapgpt_model') || 'gpt-4.1';
       let geminiKey = localStorage.getItem('pm_gemini_key') || '';
       let anthropicKey = localStorage.getItem('pm_anthropic_key') || '';
 
+      document.getElementById('cfgGapGptKey').value = gapgptKey;
+      document.getElementById('cfgGapGptModel').value = gapgptModel;
       document.getElementById('cfgGeminiKey').value = geminiKey;
       document.getElementById('cfgAnthropicKey').value = anthropicKey;
 
-      if (!geminiKey) {
+      setProviderTab(provider);
+
+      if (!gapgptKey && !geminiKey) {
         fetch('/api/config')
           .then(r => r.json())
           .then(cfg => {
+            if (cfg.gapgpt_api_key) {
+              localStorage.setItem('pm_gapgpt_key', cfg.gapgpt_api_key);
+              document.getElementById('cfgGapGptKey').value = cfg.gapgpt_api_key;
+            }
             if (cfg.gemini_api_key) {
               localStorage.setItem('pm_gemini_key', cfg.gemini_api_key);
               document.getElementById('cfgGeminiKey').value = cfg.gemini_api_key;
             }
-            if (cfg.anthropic_api_key) {
-              localStorage.setItem('pm_anthropic_key', cfg.anthropic_api_key);
-              document.getElementById('cfgAnthropicKey').value = cfg.anthropic_api_key;
+            if (cfg.provider) {
+              localStorage.setItem('pm_provider', cfg.provider);
+              setProviderTab(cfg.provider);
             }
+            if (cfg.gapgpt_model) {
+              localStorage.setItem('pm_gapgpt_model', cfg.gapgpt_model);
+              document.getElementById('cfgGapGptModel').value = cfg.gapgpt_model;
+            }
+            updateHeaderBadge();
           })
           .catch(() => {
             setTimeout(openSettingsModal, 400);
@@ -582,12 +682,18 @@
     function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
 
     function saveSettings() {
+      const gapgptKey = document.getElementById('cfgGapGptKey').value.trim();
+      const gapgptModel = document.getElementById('cfgGapGptModel').value;
       const geminiKey = document.getElementById('cfgGeminiKey').value.trim();
       const anthropicKey = document.getElementById('cfgAnthropicKey').value.trim();
 
+      localStorage.setItem('pm_provider', currentProvider);
+      localStorage.setItem('pm_gapgpt_key', gapgptKey);
+      localStorage.setItem('pm_gapgpt_model', gapgptModel);
       localStorage.setItem('pm_gemini_key', geminiKey);
       localStorage.setItem('pm_anthropic_key', anthropicKey);
 
+      updateHeaderBadge();
       closeSettingsModal();
       renderCurrentSessionMessages();
     }
@@ -900,15 +1006,23 @@
       }
     }
 
-    // Main API Call (Gemini via client fetch)
+    // Main API Call (GapGPT or Google Gemini)
     async function sendMessage() {
       const input = document.getElementById('userInput');
       const text = input.value.trim();
       if (!text) return;
 
+      const provider = localStorage.getItem('pm_provider') || 'gapgpt';
+      const gapgptKey = localStorage.getItem('pm_gapgpt_key') || '';
       const geminiKey = localStorage.getItem('pm_gemini_key') || '';
-      if (!geminiKey) {
-        alert('لطفاً ابتدا از بخش تنظیمات ⚙️ کلید Gemini API Key خود را وارد کنید.');
+
+      if (provider === 'gapgpt' && !gapgptKey) {
+        alert('لطفاً ابتدا از بخش تنظیمات ⚙️ کلید GapGPT API Key خود را وارد کنید.');
+        openSettingsModal();
+        return;
+      }
+      if (provider === 'gemini' && !geminiKey) {
+        alert('لطفاً ابتدا از بخش تنظیمات ⚙️ کلید Google Gemini API Key خود را وارد کنید.');
         openSettingsModal();
         return;
       }
@@ -926,84 +1040,144 @@
       try {
         const session = getCurrentSession();
         const messages = session ? session.messages : [];
-        const cleanContents = [];
-
-        if (messages && messages.length > 0) {
-          let lastRole = null;
-          messages.slice(-8).forEach(h => {
-            if (h.user && lastRole !== 'user') {
-              cleanContents.push({ role: "user", parts: [{ text: h.user.trim() }] });
-              lastRole = 'user';
-            }
-            if (h.gemini && lastRole !== 'model') {
-              cleanContents.push({ role: "model", parts: [{ text: h.gemini.trim() }] });
-              lastRole = 'model';
-            }
-          });
-        }
-
-        if (cleanContents.length > 0 && cleanContents[cleanContents.length - 1].role === 'user') {
-          cleanContents.pop();
-        }
-
-        cleanContents.push({
-          role: "user",
-          parts: [{ text: text }]
-        });
-
         let result = null;
         let lastError = "";
 
-        for (const model of CANDIDATE_MODELS) {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+        // ==================== 1. GAPGPT FLOW (NO VPN NEEDED) ====================
+        if (provider === 'gapgpt') {
+          const model = localStorage.getItem('pm_gapgpt_model') || 'gpt-4.1';
+          const baseUrl = localStorage.getItem('pm_gapgpt_base_url') || 'https://api.gapgpt.ir/v1';
+
+          const messagesPayload = [
+            { role: "system", content: GEMINI_SYSTEM_PROMPT }
+          ];
+
+          if (messages && messages.length > 0) {
+            messages.slice(-8).forEach(h => {
+              if (h.user) messagesPayload.push({ role: "user", content: h.user.trim() });
+              if (h.gemini) messagesPayload.push({ role: "assistant", content: h.gemini.trim() });
+            });
+          }
+          messagesPayload.push({ role: "user", content: text });
+
           try {
-            const resp = await fetch(url, {
+            const resp = await fetch(`${baseUrl}/chat/completions`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              signal: AbortSignal.timeout(25000),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${gapgptKey}`
+              },
+              signal: AbortSignal.timeout(35000),
               body: JSON.stringify({
-                system_instruction: {
-                  parts: [{ text: GEMINI_SYSTEM_PROMPT }]
-                },
-                contents: cleanContents,
-                generationConfig: {
-                  temperature: 0.25,
-                  maxOutputTokens: 3000
-                }
+                model: model,
+                messages: messagesPayload,
+                temperature: 0.25,
+                max_tokens: 3000
               })
             });
 
             if (resp.ok) {
               const data = await resp.json();
-              const candidates = data.candidates || [];
-              if (candidates.length > 0) {
-                const parts = candidates[0].content?.parts || [];
-                const fullText = parts.map(p => p.text || '').join('').trim();
-                
-                const pattern = /<<<CLAUDE_PROMPT>>>\s*([\s\S]*?)\s*<<<END_CLAUDE_PROMPT>>>/;
-                const match = fullText.match(pattern);
-                let claudePrompt = "";
-                let cleanGeminiText = fullText;
+              const fullText = data.choices?.[0]?.message?.content || '';
+              const pattern = /<<<CLAUDE_PROMPT>>>\s*([\s\S]*?)\s*<<<END_CLAUDE_PROMPT>>>/;
+              const match = fullText.match(pattern);
+              let claudePrompt = "";
+              let cleanText = fullText;
 
-                if (match) {
-                  claudePrompt = match[1].trim();
-                  cleanGeminiText = fullText.replace(pattern, '').trim();
-                }
-
-                result = {
-                  geminiText: cleanGeminiText,
-                  claudePrompt: claudePrompt
-                };
-                break;
+              if (match) {
+                claudePrompt = match[1].trim();
+                cleanText = fullText.replace(pattern, '').trim();
               }
+
+              result = {
+                geminiText: cleanText,
+                claudePrompt: claudePrompt
+              };
             } else {
               const errJson = await resp.json().catch(() => ({}));
               lastError = errJson.error?.message || `${resp.status} ${resp.statusText}`;
-              console.warn(`Model ${model} failed:`, lastError);
             }
           } catch (e) {
-            lastError = e.message || 'Timeout / Network error';
-            console.warn(`Model ${model} exception:`, lastError);
+            lastError = e.message || 'خطای اتصال به سرور گپ‌جی‌پی‌تی';
+          }
+        } else {
+          // ==================== 2. GOOGLE GEMINI FLOW ====================
+          const cleanContents = [];
+
+          if (messages && messages.length > 0) {
+            let lastRole = null;
+            messages.slice(-8).forEach(h => {
+              if (h.user && lastRole !== 'user') {
+                cleanContents.push({ role: "user", parts: [{ text: h.user.trim() }] });
+                lastRole = 'user';
+              }
+              if (h.gemini && lastRole !== 'model') {
+                cleanContents.push({ role: "model", parts: [{ text: h.gemini.trim() }] });
+                lastRole = 'model';
+              }
+            });
+          }
+
+          if (cleanContents.length > 0 && cleanContents[cleanContents.length - 1].role === 'user') {
+            cleanContents.pop();
+          }
+
+          cleanContents.push({
+            role: "user",
+            parts: [{ text: text }]
+          });
+
+          for (const model of CANDIDATE_MODELS) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+            try {
+              const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: AbortSignal.timeout(25000),
+                body: JSON.stringify({
+                  system_instruction: {
+                    parts: [{ text: GEMINI_SYSTEM_PROMPT }]
+                  },
+                  contents: cleanContents,
+                  generationConfig: {
+                    temperature: 0.25,
+                    maxOutputTokens: 3000
+                  }
+                })
+              });
+
+              if (resp.ok) {
+                const data = await resp.json();
+                const candidates = data.candidates || [];
+                if (candidates.length > 0) {
+                  const parts = candidates[0].content?.parts || [];
+                  const fullText = parts.map(p => p.text || '').join('').trim();
+                  
+                  const pattern = /<<<CLAUDE_PROMPT>>>\s*([\s\S]*?)\s*<<<END_CLAUDE_PROMPT>>>/;
+                  const match = fullText.match(pattern);
+                  let claudePrompt = "";
+                  let cleanGeminiText = fullText;
+
+                  if (match) {
+                    claudePrompt = match[1].trim();
+                    cleanGeminiText = fullText.replace(pattern, '').trim();
+                  }
+
+                  result = {
+                    geminiText: cleanGeminiText,
+                    claudePrompt: claudePrompt
+                  };
+                  break;
+                }
+              } else {
+                const errJson = await resp.json().catch(() => ({}));
+                lastError = errJson.error?.message || `${resp.status} ${resp.statusText}`;
+                console.warn(`Model ${model} failed:`, lastError);
+              }
+            } catch (e) {
+              lastError = e.message || 'Timeout / Network error';
+              console.warn(`Model ${model} exception:`, lastError);
+            }
           }
         }
 
@@ -1022,11 +1196,11 @@
         } else {
           let userFriendlyError = lastError;
           if (lastError.toLowerCase().includes('timed out') || lastError.toLowerCase().includes('abort')) {
-            userFriendlyError = 'زمان پاسخ‌دهی به پایان رسید (Timeout). سرور گوگل در ایران به فیلترشکن (VPN) نیاز دارد؛ لطفاً اتصال و پایداری فیلترشکن خود را بررسی فرمایید.';
+            userFriendlyError = 'زمان پاسخ‌دهی به پایان رسید (Timeout). اگر از گوگل استفاده می‌کنید اتصال فیلترشکن را بررسی کنید یا در تنظیمات ⚙️ موتور را روی گپ‌جی‌پی‌تی (بدون نیاز به فیلترشکن) قرار دهید.';
           } else if (lastError.toLowerCase().includes('failed to fetch') || lastError.toLowerCase().includes('network')) {
-            userFriendlyError = 'عدم برقراری ارتباط با گوگل. لطفاً مطمئن شوید فیلترشکن (VPN) شما روشن و متصل است.';
+            userFriendlyError = 'عدم برقراری ارتباط با سرور هوش مصنوعی.';
           }
-          renderError(`⚠️ خطا در ارتباط با جمینای: ${userFriendlyError}`);
+          renderError(`⚠️ خطا در ارتباط با هوش مصنوعی: ${userFriendlyError}`);
         }
 
       } catch (e) {

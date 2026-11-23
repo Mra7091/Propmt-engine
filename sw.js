@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pm-engine-v2.4.1';
+const CACHE_NAME = 'pm-engine-v2.5.0';
 const ASSETS = [
   './',
   './index.html',
@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
   // Never cache AI API requests
-  if (url.includes('googleapis.com') || url.includes('anthropic.com')) {
+  if (url.includes('googleapis.com') || url.includes('anthropic.com') || url.includes('gapgpt')) {
     event.respondWith(fetch(event.request));
     return;
   }
