@@ -249,7 +249,7 @@
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
         <h3 class="font-bold text-sm text-slate-200 flex items-center gap-1.5">
           <span>⚙️ تنظیمات</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">نسخه v2.4.0</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">نسخه v2.4.1</span>
         </h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 p-1">✕</button>
       </div>
@@ -299,7 +299,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "2.4.0";
+    const APP_VERSION = "2.4.1";
 
     // --- Auto-Update & Smart Cache System ---
     if ('serviceWorker' in navigator) {
@@ -960,7 +960,7 @@
             const resp = await fetch(url, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              signal: AbortSignal.timeout(9000),
+              signal: AbortSignal.timeout(25000),
               body: JSON.stringify({
                 system_instruction: {
                   parts: [{ text: GEMINI_SYSTEM_PROMPT }]
@@ -1020,7 +1020,13 @@
             claude_response: null
           });
         } else {
-          renderError(`خطا در ارتباط با جمینای: ${lastError}`);
+          let userFriendlyError = lastError;
+          if (lastError.toLowerCase().includes('timed out') || lastError.toLowerCase().includes('abort')) {
+            userFriendlyError = 'زمان پاسخ‌دهی به پایان رسید (Timeout). سرور گوگل در ایران به فیلترشکن (VPN) نیاز دارد؛ لطفاً اتصال و پایداری فیلترشکن خود را بررسی فرمایید.';
+          } else if (lastError.toLowerCase().includes('failed to fetch') || lastError.toLowerCase().includes('network')) {
+            userFriendlyError = 'عدم برقراری ارتباط با گوگل. لطفاً مطمئن شوید فیلترشکن (VPN) شما روشن و متصل است.';
+          }
+          renderError(`⚠️ خطا در ارتباط با جمینای: ${userFriendlyError}`);
         }
 
       } catch (e) {
